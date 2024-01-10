@@ -31,16 +31,16 @@ import h5py
 import numpy as np
 from scipy.misc import imread, imresize
 
-forbidden_att = ['none', 'other', 'sorry', 'pic', 'extreme', 'rightest', 'tie', 'leftest', 'hard', 'only', 
-'darkest', 'foremost', 'topmost', 'leftish','utmost', 'lemon', 'good', 'hot', 'more', 'least', 'less', 
-'cant', 'only', 'opposite', 'upright', 'lightest', 'single', 'touching', 'bad', 'main', 'remote', '3pm', 
+forbidden_att = ['none', 'other', 'sorry', 'pic', 'extreme', 'rightest', 'tie', 'leftest', 'hard', 'only',
+'darkest', 'foremost', 'topmost', 'leftish','utmost', 'lemon', 'good', 'hot', 'more', 'least', 'less',
+'cant', 'only', 'opposite', 'upright', 'lightest', 'single', 'touching', 'bad', 'main', 'remote', '3pm',
 'same', 'bottom', 'middle']
-forbidden_verb = ['none', 'look', 'be', 'see', 'have', 'head', 'show', 'strip', 'get', 'turn', 'wear', 
-'reach', 'get', 'cross', 'turn', 'point', 'take', 'color', 'handle', 'cover', 'blur', 'close', 'say', 'go', 
-'dude', 'do', 'let', 'think', 'top', 'head', 'take', 'that', 'say', 'carry', 'man', 'come', 'check', 'stuff', 
-'pattern', 'use', 'light', 'follow', 'rest', 'watch', 'make', 'stop', 'arm', 'try', 'want', 'count', 'lead', 
+forbidden_verb = ['none', 'look', 'be', 'see', 'have', 'head', 'show', 'strip', 'get', 'turn', 'wear',
+'reach', 'get', 'cross', 'turn', 'point', 'take', 'color', 'handle', 'cover', 'blur', 'close', 'say', 'go',
+'dude', 'do', 'let', 'think', 'top', 'head', 'take', 'that', 'say', 'carry', 'man', 'come', 'check', 'stuff',
+'pattern', 'use', 'light', 'follow', 'rest', 'watch', 'make', 'stop', 'arm', 'try', 'want', 'count', 'lead',
 'know', 'mean', 'lap', 'moniter', 'dot', 'set', 'cant', 'serve', 'surround', 'isnt', 'give', 'click']
-forbidden_noun = ['none', 'picture', 'pic', 'screen', 'background', 'camera', 'edge', 'standing', 'thing', 
+forbidden_noun = ['none', 'picture', 'pic', 'screen', 'background', 'camera', 'edge', 'standing', 'thing',
 'holding', 'end', 'view', 'bottom', 'center', 'row', 'piece']
 
 def build_vocab(refer, params):
@@ -49,25 +49,25 @@ def build_vocab(refer, params):
   """
   # remove bad words, and return final sentences (sent_id -> final)
   count_thr = params['word_count_threshold']
-  sentToTokens = refer.sentToTokens
+  sentToTokens = refer.sentToTokens   # 获取的就是每句话中的词汇，格式 sent_id: [xx,xx,xx]
 
   # count up the number of words
   word2count = {}
   for sent_id, tokens in sentToTokens.items():
     for wd in tokens:
-      word2count[wd] = word2count.get(wd, 0) + 1
+      word2count[wd] = word2count.get(wd, 0) + 1  # 计数
 
   # print some stats
   total_words = sum(word2count.values())
-  bad_words = [wd for wd, n in word2count.items() if n <= count_thr]
+  bad_words = [wd for wd, n in word2count.items() if n <= count_thr]  # 小于某个阈值归为bad word，默认5
   good_words= [wd for wd, n in word2count.items() if n > count_thr]
   bad_count = sum([word2count[wd] for wd in bad_words])
   print('number of good words: %d' % len(good_words))
   print('number of bad words: %d/%d = %.2f%%' % (len(bad_words), len(word2count), len(bad_words)*100.0/len(word2count)))
   print('number of UNKs in sentences: %d/%d = %.2f%%' % (bad_count, total_words, bad_count*100.0/total_words))
-  vocab = good_words
+  vocab = good_words  # 不要出现太少的
 
-  # add category words
+  # add category words 把类别里的词也加入vocab
   category_names = refer.Cats.values() + ['__background__']
   for cat_name in category_names:
     for wd in cat_name.split():
@@ -87,7 +87,7 @@ def build_vocab(refer, params):
   sentToFinal = {}
   for sent_id, tokens in sentToTokens.items():
     final = [wd if word2count[wd] > count_thr else '<UNK>' for wd in tokens]
-    sentToFinal[sent_id] = final
+    sentToFinal[sent_id] = final  # 替换里面不常用的词汇为UNK
 
   return vocab, sentToFinal
 
@@ -95,8 +95,8 @@ def check_sentLength(sentToFinal):
   sent_lengths = {}
   for sent_id, tokens in sentToFinal.items():
     nw = len(tokens)
-    sent_lengths[nw] = sent_lengths.get(nw, 0) + 1
-  max_len = max(sent_lengths.keys())
+    sent_lengths[nw] = sent_lengths.get(nw, 0) + 1  # 同一长度下的sent_id
+  max_len = max(sent_lengths.keys())  # 获取最大长度
   print('max length of sentence in raw data is %d' % max_len)
   print('sentence length distribution (count, number of words):')
   sum_len = sum(sent_lengths.values())
@@ -123,7 +123,7 @@ def encode_captions(sentences, wtoi, params):
 
 def check_encoded_labels(sentences, labels, itow):
   for sent in sentences:
-    # gd truth 
+    # gd truth
     print('gd-truth: %s' % (' '.join(sent['tokens'])))
     # deocde labels
     h5_id = sent['h5_id']
@@ -135,7 +135,7 @@ def check_encoded_labels(sentences, labels, itow):
 def prepare_json(refer, sentToFinal, ref_to_att_wds, params):
   # prepare refs = [{ref_id, ann_id, image_id, box, split, category_id, sent_ids}]
   refs = []
-  for ref_id, ref in refer.Refs.items():
+  for ref_id, ref in refer.Refs.items():  # 每个ref对应一个注释ann
     box = refer.refToAnn[ref_id]['bbox']
     att_wds = ref_to_att_wds[ref_id] if ref_id in ref_to_att_wds else []
     refs += [{'ref_id': ref_id, 'split': ref['split'], 'category_id': ref['category_id'], 'ann_id': ref['ann_id'],
@@ -160,7 +160,7 @@ def prepare_json(refer, sentToFinal, ref_to_att_wds, params):
   anns = []
   h5_id = 0
   for image_id in refer.Imgs:
-    ann_ids = [ann['id'] for ann in refer.imgToAnns[image_id]]
+    ann_ids = [ann['id'] for ann in refer.imgToAnns[image_id]]  # 读取该图片下所有的注释
     for ann_id in ann_ids:
       ann = refer.Anns[ann_id]
       anns += [{'ann_id': ann_id, 'category_id': ann['category_id'], 'box': ann['bbox'], 'image_id': image_id, 'h5_id': h5_id}]
@@ -177,7 +177,7 @@ def prepare_json(refer, sentToFinal, ref_to_att_wds, params):
       sent['dataset_splitBy'] = refer.Sents[sent_id]['dataset_splitBy']
     sentences += [sent]
     # sentences += [{'sent_id': sent_id, 'tokens': tokens, 'h5_id': h5_id}]
-    h5_id = h5_id + 1  
+    h5_id = h5_id + 1
   print('There are in all %d sentences to written into hdf5 file.' % h5_id)
 
   return refs, images, anns, sentences
@@ -187,7 +187,7 @@ def build_att_vocab(refer, params, att_types=['r1', 'r2', 'r7']):
   Load sents = [{tokens, atts, sent_id, parse, raw, sent left}] 
   from pyutils/refer-parser2/cache/parsed_atts/dataset_splitBy/sents.json
   """
-  sents = json.load(open(osp.join('pyutils/refer-parser2/cache/parsed_atts', 
+  sents = json.load(open(osp.join('pyutils/refer-parser2/cache/parsed_atts',
                                   params['dataset']+'_'+params['splitBy'], 'sents.json')))
   sentToRef = refer.sentToRef
   ref_to_att_wds = {}
@@ -241,44 +241,44 @@ def main(params):
 
   # mkdir and write json file
   if not osp.isdir(osp.join('cache/prepro', dataset+'_'+splitBy)):
-    os.makedirs(osp.join('cache/prepro', dataset+'_'+splitBy))
+    os.makedirs(osp.join('cache/prepro', dataset+'_'+splitBy))  # 首次创建文件夹
 
   # load refer
-  sys.path.insert(0, 'pyutils/refer')
+  sys.path.insert(0, 'pyutils/refer') # 导入refer，读取refer api数据
   from refer import REFER
   refer = REFER(data_root, dataset, splitBy)
 
   # create vocab
   vocab, sentToFinal = build_vocab(refer, params)
-  itow = {i: w for i, w in enumerate(vocab)} 
-  wtoi = {w: i for i, w in enumerate(vocab)} 
-  
+  itow = {i: w for i, w in enumerate(vocab)}
+  wtoi = {w: i for i, w in enumerate(vocab)}
+
   # check sentence length
   check_sentLength(sentToFinal)
 
   # create attribute vocab
-  att2cnt, ref_to_att_wds = build_att_vocab(refer, params, ['r1','r2','r7']) 
+  att2cnt, ref_to_att_wds = build_att_vocab(refer, params, ['r1','r2','r7'])  # 暂时不分析，貌似后面没用
   itoa = {i: a for i, a in enumerate(att2cnt.keys())}
   atoi = {a: i for i, a in enumerate(att2cnt.keys())}
 
   # prepare refs, images, anns, sentences
   # and write json
   refs, images, anns, sentences = prepare_json(refer, sentToFinal, ref_to_att_wds, params)
-  json.dump({'refs': refs, 
-             'images': images, 
-             'anns': anns, 
-             'sentences': sentences, 
+  json.dump({'refs': refs,
+             'images': images,
+             'anns': anns,
+             'sentences': sentences,
              'word_to_ix': wtoi,
              'att_to_ix' : atoi,
              'att_to_cnt': att2cnt,
              'cat_to_ix': {cat_name: cat_id for cat_id, cat_name in refer.Cats.items()},
-             'label_length': params['max_length'],}, 
+             'label_length': params['max_length'],},
              open(osp.join('cache/prepro', dataset+'_'+splitBy, params['output_json']), 'w'))
   print('%s written.' % osp.join('cache/prepro', params['output_json']))
 
   # write h5 file which contains /sentences
   f = h5py.File(osp.join('cache/prepro', dataset+'_'+splitBy, params['output_h5']), 'w')
-  L = encode_captions(sentences, wtoi, params)
+  L = encode_captions(sentences, wtoi, params)  # 就是把所有句子转换为id矩阵
   f.create_dataset("labels", dtype='int32', data=L)
   f.close()
   print('%s writtern.' % osp.join('cache/prepro', params['output_h5']))
