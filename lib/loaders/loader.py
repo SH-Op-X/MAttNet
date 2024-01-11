@@ -49,7 +49,7 @@ class Loader(object):
         self.Anns = {ann['ann_id']: ann for ann in self.anns}
         self.Sentences = {sent['sent_id']: sent for sent in self.sentences}
         self.annToRef = {ref['ann_id']: ref for ref in self.refs}
-        self.sentToRef = {sent_id: ref for ref in self.refs for sent_id in ref['sent_ids']}
+        self.sentToRef = {sent_id: ref for ref in self.refs for sent_id in ref['sent_ids']} # 头次见双重循环，循环从左到右
 
         # read data_h5 if exists
         self.data_h5 = None

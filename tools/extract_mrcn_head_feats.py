@@ -43,11 +43,11 @@ def main(args):
   # load dataset
   data_json = osp.join('cache/prepro', dataset_splitBy, 'data.json')
   data_h5 = osp.join('cache/prepro', dataset_splitBy, 'data.h5')
-  loader = Loader(data_json, data_h5)
+  loader = Loader(data_json, data_h5)   # 读取之前prepro写入的data.json和data.h5
   images = loader.images
 
   # load mrcn model
-  mrcn = inference.Inference(args)
+  mrcn = inference.Inference(args)  # 读取配置、数据并搭建好res101网络
   imdb = mrcn.imdb
 
   # feats_h5
@@ -56,14 +56,14 @@ def main(args):
     os.makedirs(feats_dir)
 
   # extract
-  for i, image in enumerate(images):
+  for i, image in enumerate(images):  # 每个图片建立一个h5
     file_name = image['file_name']
     img_path = osp.join(IMAGE_DIR, file_name)
-    feat, im_info = mrcn.extract_head(img_path)
+    feat, im_info = mrcn.extract_head(img_path) # 具体网络提取不管了，只知道传入图片位置即可，返回提取的head特征和im信息
     feat = feat.data.cpu().numpy()
 
     # write
-    feat_h5 = osp.join(feats_dir, str(image['image_id'])+'.h5')
+    feat_h5 = osp.join(feats_dir, str(image['image_id'])+'.h5') # image['image_id']对应image['file_name']的文件名除去后缀
     f = h5py.File(feat_h5, 'w')
     f.create_dataset('head', dtype=np.float32, data=feat)
     f.create_dataset('im_info', dtype=np.float32, data=im_info)

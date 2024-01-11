@@ -41,28 +41,28 @@ def get_imdb_name(imdb_name):
     return {'TRAIN_IMDB': "coco_2014_train_minus_refer_valtest+coco_2014_valminusminival",
             'TEST_IMDB' : "coco_2014_minival"}
             
-class Inference:
+class Inference:  # 这个代码主要使用的mask-faster-rcnn代码，不作太具体分析，知道功能即可
 
   def __init__(self, args):
 
-    self.imdb_name = args.imdb_name
-    self.net_name = args.net_name
-    self.tag = args.tag
-    self.iters = args.iters
+    self.imdb_name = args.imdb_name   # coco_minus_refer
+    self.net_name = args.net_name     # res101
+    self.tag = args.tag               # notime
+    self.iters = args.iters           # 1250000
 
     # Config
     cfg_file = osp.join(mrcn_dir, 'experiments/cfgs/%s.yml' % self.net_name)
     cfg_list = ['ANCHOR_SCALES', [4,8,16,32], 'ANCHOR_RATIOS', [0.5,1,2]]
-    if cfg_file is not None: cfg_from_file(cfg_file)
+    if cfg_file is not None: cfg_from_file(cfg_file)  #读取配置
     if cfg_list is not None: cfg_from_list(cfg_list)
     print('Using config:')
-    pprint.pprint(cfg)
+    pprint.pprint(cfg)  # 打印res101.yml
 
     # load imdb
-    self.imdb = get_imdb(get_imdb_name(self.imdb_name)['TEST_IMDB'])
+    self.imdb = get_imdb(get_imdb_name(self.imdb_name)['TEST_IMDB'])  # 返回的是一个refer_coco类
 
     # Load network
-    self.net = self.load_net()
+    self.net = self.load_net()  # 搭建res101网络
 
   def load_net(self):
     # Load network
