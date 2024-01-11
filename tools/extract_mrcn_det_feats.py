@@ -56,7 +56,7 @@ def det_to_pool5_fc7(mrcn, det, net_conv, im_info):
   box = np.array([det['box']])  # [[xywh]]
   box = xywh_to_xyxy(box)  # [[x1y1x2y2]]
   pool5, fc7 = mrcn.box_to_pool5_fc7(Variable(torch.from_numpy(net_conv).cuda()), im_info, box)  # (1, 2048)
-  fc7 = fc7.mean(3).mean(2)
+  fc7 = fc7.mean(3).mean(2)   # 相比于ann_feats多了这个，实际跑的过程中发现该行需要被注释掉，不需要
   return pool5, fc7
 
 def main(args):
@@ -76,7 +76,7 @@ def main(args):
   # load dataset
   data_json = osp.join('cache/prepro', dataset_splitBy, 'data.json')
   data_h5 = osp.join('cache/prepro', dataset_splitBy, 'data.h5')
-  dets_json = osp.join('cache/detections', dataset_splitBy, '%s_%s_%s_dets.json' % (args.net_name, args.imdb_name, args.tag))
+  dets_json = osp.join('cache/detections', dataset_splitBy, '%s_%s_%s_dets.json' % (args.net_name, args.imdb_name, args.tag))   # 是作者已经使用目标检测得到的结果json文件
   loader = DetsLoader(data_json, data_h5, dets_json)
   images = loader.images
   dets = loader.dets

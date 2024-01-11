@@ -65,14 +65,14 @@ class DetsLoader(Loader):
       image['det_ids'] = []
     for det in self.dets:
       image = self.Images[det['image_id']]
-      image['det_ids'] += [det['det_id']]
+      image['det_ids'] += [det['det_id']] # 和Loader区别在多个det_ids
 
     # img_iterators for each split
     self.split_ix = {}
     self.iterators = {}
     for image_id, image in self.Images.items():
       # we use its ref's split (there is assumption that each image only has one split)
-      split = self.Refs[image['ref_ids'][0]]['split']
+      split = self.Refs[image['ref_ids'][0]]['split'] # 看是属于训练集还是测试等，默认同一image一个split
       if split not in self.split_ix:
         self.split_ix[split] = []
         self.iterators[split] = 0
