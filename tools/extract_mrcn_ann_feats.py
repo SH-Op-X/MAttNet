@@ -26,7 +26,7 @@ from loaders.loader import Loader
 
 
 # box functions
-def xywh_to_xyxy(boxes):
+def xywh_to_xyxy(boxes):  # bbox坐标转换
   """Convert [x y w h] box format to [x1 y1 x2 y2] format."""
   return np.hstack((boxes[:, 0:2], boxes[:, 0:2] + boxes[:, 2:4] - 1))
 
@@ -70,7 +70,7 @@ def ann_to_pool5_fc7(mrcn, ann, net_conv, im_info):
   """
   box = np.array([ann['box']])  # [[xywh]]
   box = xywh_to_xyxy(box)  # [[x1y1x2y2]]
-  pool5, fc7 = mrcn.box_to_pool5_fc7(Variable(torch.from_numpy(net_conv).cuda()), im_info, box)  # (1, 2048)
+  pool5, fc7 = mrcn.box_to_pool5_fc7(Variable(torch.from_numpy(net_conv).cuda()), im_info, box)  # (1, 2048)  用神经网络提取单独注释物体框图像的特征
   return pool5, fc7
 
 def main(args):
@@ -108,12 +108,12 @@ def main(args):
   pool5_set = f.create_dataset('pool5', (num_anns, 1024), dtype=np.float32)
   fc7_set = f.create_dataset('fc7', (num_anns, 2048), dtype=np.float32)
 
-  # extract
+  # extract 分别是pool5和fc7的特征
   feats_dir = '%s_%s_%s' % (args.net_name, args.imdb_name, args.tag)
   head_feats_dir = osp.join('cache/feats/', dataset_splitBy, 'mrcn', feats_dir)
   for i, image in enumerate(images):
     image_id = image['image_id']
-    net_conv, im_info = image_to_head(head_feats_dir, image_id)
+    net_conv, im_info = image_to_head(head_feats_dir, image_id)   # 读取之前head提取的feats（h5里）
     ann_ids = image['ann_ids']
     for ann_id in ann_ids:
       ann = loader.Anns[ann_id]
